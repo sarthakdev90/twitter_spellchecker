@@ -68,6 +68,20 @@ class TwitterStreamListener(tweepy.StreamListener):
 		'''
 		print "Error: ", status
 
+def get_numbers():
+	try:
+	    mistakes = incorrect_words_db.lrange("mistakes", 0, -1)
+	    counter = Counter(mistakes)
+	    
+	    numbers = {
+		    "tweets" : numbers_db.get("tweets"),
+		    "words" : numbers_db.get("words"), 
+		    "corrected" : incorrect_words_db.llen("mistakes"),
+		    "most_common": counter.most_common()[0][0]
+			}
+		return numbers
+	except Exception as e:
+		print traceback.format_exc()
 
 if __name__ == '__main__':
 	try:
