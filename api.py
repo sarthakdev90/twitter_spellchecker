@@ -29,16 +29,16 @@ class TwitterStreamListener(tweepy.StreamListener):
 		    	numbers_db.incr("tweets")
 		    	
 		    	if numbers_db.get('hashtags') and numbers_db.get('urls'):
-			        hash_tags = int(numbers_db.get('hashtags')) + hashtags
-			        links = int(numbers_db.get('urls')) + urls
-			        numbers_db.set('hashtags', hash_tags)
-			        numbers_db.set('urls', links)
-			    else:
-			        numbers_db.set('hashtags', 0)
-			        numbers_db.set('urls', 0)
+			    hash_tags = int(numbers_db.get('hashtags')) + hashtags
+			    links = int(numbers_db.get('urls')) + urls
+			    numbers_db.set('hashtags', hash_tags)
+			    numbers_db.set('urls', links)
+			else:
+			    numbers_db.set('hashtags', 0)
+			    numbers_db.set('urls', 0)
 		        
 		        sentence = TextBlob(t)
-		        words = [i for i in sent.words if i != 'RT' and not i.startswith('@') and not self.is_link(i)]
+		        words = [i for i in sentence.words if i != 'RT' and not i.startswith('@') and not self.is_link(i)]
 		        print "Words: ", words
 			for w in words:
 			    numbers_db.incr("words")
