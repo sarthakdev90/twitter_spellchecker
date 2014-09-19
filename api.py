@@ -19,11 +19,25 @@ class TwitterStreamListener(tweepy.StreamListener):
 			Function to process a tweet.
 		'''
 		try:
-		    t = json.loads(tweet).get('text').encode('utf-8')
+		    tw = json.loads(tweet)
+		    t = tw.get('text').encode('utf-8')
+	            hashtags = len(tw.get('entities', {}).get('hashtags', []))
+	            urls = len(tw.get('entities', {}).get('urls', []))
+	            
 	            print "Tweet: ", t
-		    numbers_db.incr("tweets")
 		    if t:
-		        sent = TextBlob(t)
+		    	numbers_db.incr("tweets")
+		    	
+		    	if numbers_db.get('hashtags') and numbers_db.get('urls'):
+			        hash_tags = int(numbers_db.get('hashtags')) + hashtags
+			        links = int(numbers_db.get('urls')) + urls
+			        numbers_db.set('hashtags', hash_tags)
+			        numbers_db.set('urls', links)
+			    else:
+			        numbers_db.set('hashtags', 0)
+			        numbers_db.set('urls', 0)
+		        
+		        sentence = TextBlob(t)
 		        words = [i for i in sent.words if i != 'RT' and not i.startswith('@') and not self.is_link(i)]
 		        print "Words: ", words
 			for w in words:
@@ -77,8 +91,11 @@ def get_numbers():
 		    "tweets" : numbers_db.get("tweets"),
 		    "words" : numbers_db.get("words"), 
 		    "corrected" : incorrect_words_db.llen("mistakes"),
-		    "most_common": counter.most_common()[0][0]
+		    "most_common": counter.most_common()[0][0],
+		    "links" : numbers_db.get("urls"),
+		    "hashtags": numbers_db.get("hashtags")
 			}
+			
 	    return numbers
 	except Exception as e:
 		print traceback.format_exc()
