@@ -4,14 +4,9 @@ from tweepy import Stream, OAuthHandler
 from tweepy.streaming import StreamListener
 import tweepy
 import json
-#from tweepy.streaming import StreamHandler
 
-# api = twitter.Api(
-# 	consumer_key = CONSUMER_KEY,
-# 	cosumer_secret = CONSUMER_SECRET,
-# 	access_token_key = ACCESS_KEY,
-# 	access_token_secret = ACCESS_TOKEN
-# 	)
+crunched_words = 0
+corrected = 0
 
 class TwitterStreamListener(tweepy.StreamListener):
 	'''
@@ -19,9 +14,20 @@ class TwitterStreamListener(tweepy.StreamListener):
 	'''
 
 	def on_data(self, tweet):
-	    t = json.loads(tweet)
-            print "Tweet: ", t.get('text')
+	    t = json.loads(tweet).get('text').encode('utf-8')
+            print "Tweet: ", t
+	    if t:
+	        sent = TextBlob(t)
+	        words = sent.words
+		for w in words:
+		    global crunched_words, corrected
+		    crunched_words += 1
+		    wor = Word(w)
+		    if len(wor.spellcheck()) != 1:
+		        corrected += 1
 		#Do something with the on_data
+	    print "Crunched Words: ", crunched_words
+	    print "Corrected: ", corrected
 
 	def on_error(self, status):
 		print "Error: ", status
@@ -33,5 +39,5 @@ if __name__ == '__main__':
 	
 	l = TwitterStreamListener()
 	streamer = Stream(auth, listener = l)
-	streamer.filter(track = ['#python'])
+	streamer.filter(track = ['#mufc'])
 
