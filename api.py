@@ -3,7 +3,7 @@ from twitter_config import CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_K
 from tweepy import Stream, OAuthHandler
 from tweepy.streaming import StreamListener
 import tweepy, redis
-import json, traceback
+import json, traceback, re
 from collections import Counter
 
 numbers_db = redis.Redis(db = 10)
@@ -29,8 +29,9 @@ class TwitterStreamListener(tweepy.StreamListener):
 			for w in words:
 			    numbers_db.incr("words")
 			    wor = Word(w)
-			    if len(wor.spellcheck()) != 1:
-			        incorrect_words_db.rpush("words", w)
+			    checks = [i[0] for i in wor.spellcheck()] 
+			    if w not in checks:
+			        incorrect_words_db.rpush("mistakes", w)
 			return True
 			
 		except Exception as e:
@@ -50,7 +51,7 @@ class TwitterStreamListener(tweepy.StreamListener):
 		'''
 		try:
 		    self.process(tweet)
-		    mistakes = incorrect_words_db.lrange("words", 0, -1)
+		    mistakes = incorrect_words_db.lrange("mistakes", 0, -1)
 		    counter = Counter(mistakes)
 		    
 		    print "Crunched Tweets: ", numbers_db.get("tweets")
